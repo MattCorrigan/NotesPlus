@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<title>W3.CSS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<body>
+
+<div class="w3-container w3-black w3-padding-8">
+  <h2>Notes+  
+  
+  <div class="w3-display-topright w3-grey w3-dropdown-hover"> 
+  <button style="padding: 10px 16px" class="w3-button w3-padding-8">Add Note</button>
+  <div class="w3-dropdown-content w3-bar-block w3-border">
+    <a class="w3-bar-item w3-button w3-padding-large w3-ripple" onclick="addNote('Cornell', '', '')">Cornell</a>
+    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-ripple" onclick="addNote('Outline', '', '')">Outline</a>
+    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-ripple" onclick="addNote('Bullet Point', '', '')">Bullet Point</a>
+  </div>
+  </div>
+  </h2>
+  
+</div>
+  <p class= "w3-padding"><b>Your notes:</b></p>
+  <ul class= "notes w3-ul">
+  
+ 
+  </ul>
+  
+ <style>
+	.w3-green {
+		padding: 6px;
+	}
+</style> 
+ 
+<script>
+
+function alreadyExists(name) {
+	for (var key in localStorage) {
+		if (key == name) {
+			return true;
+		}
+	}
+	return false;
+}
+
+function addNote(style, name, myDate) {
+    var li = document.createElement("li");
+    var link = document.createElement("a");
+	link.className = "w3-button w3-block w3-left-align w3-padding-small w3-ripple";
+	var div = document.createElement("div");
+	div.className =  "w3-green";
+	
+	var b = document.createElement("b");
+	if(name == ""){
+		name = prompt("Please enter the name of your note");
+		while(alreadyExists(name)) {
+			name = prompt("Please enter nonexisting name:");
+		}
+		if (name == "" || name == null) { return; }
+	}
+	if(style == "Bullet Point"){
+	link.setAttribute("href", "./bullets.html?title=" + name);}
+	if(style == "Cornell"){
+	link.setAttribute("href", "./cornell.html?title=" + name);}
+	if(style == "Outline"){
+	link.setAttribute("href", "./outline.html?title=" + name);}
+	b.innerHTML =  name +" - "+style;
+	link.onclick = function() {moveNote(this);};
+	var button = document.createElement("button");
+	button.onclick = function() {deleteNote(this);};
+	button.className = "w3-button w3-black w3-right w3-padding-small";
+	button.innerHTML = "X";
+	var br1 = document.createElement("br");
+	var i = document.createElement("i");
+	if(myDate == ""){
+	var myDate = new Date();
+	myDate = (myDate.getMonth() + 1) + "-" + myDate.getDate() + "-" + myDate.getFullYear();}
+	i.innerHTML = myDate;
+	var br2 = document.createElement("br");
+	
+	div.appendChild(b);
+	div.appendChild(button);
+	div.appendChild(br1);
+	div.appendChild(i);
+	div.appendChild(br2);
+	
+	link.appendChild(div);
+	
+	li.appendChild(link);
+	
+	document.getElementsByClassName("notes")[0].appendChild(li);
+	var info = style + "," + myDate;
+	localStorage.setItem(name, info);
+	}
+function moveNote(button){
+	button.parentNode.parentNode.parentNode.parentNode.prepend(button.parentNode.parentNode.parentNode);
+}
+	
+function deleteNote(button) {
+	var r = confirm("Are you sure that you want to delete this note?")
+	if(r){
+	button.parentNode.parentNode.parentNode.parentNode.removeChild(button.parentNode.parentNode.parentNode);
+	}
+	var k = button.parentNode.childNodes[0].innerHTML.split(" - ")[0];
+	localStorage.removeItem(k);
+}
+function loadNotes(){
+	for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+		addNote(localStorage.getItem(localStorage.key(i)).split(",")[0], localStorage.key(i), localStorage.getItem(localStorage.key(i)).split(",")[1]);
+	}
+}
+loadNotes();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+		<title>Outline Note</title>
+		<link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+	</head>
+	
+	<body>
+	
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				font-family: "Roboto";
+			}
+			
+			body {
+				overflow-x: hidden;
+			}
+			
+			.title {
+				outline-width: 0;
+				border: 0;
+				margin: 0 auto;
+				text-align: center;
+				font-size: 25px;
+				display: block;
+				width: 100vw;
+				margin-top: 30px;
+			}
+			
+			.main {
+				width:900px;
+				max-width: 60vw;
+				margin: 30px auto;
+				font-size: 1.25rem;
+				display: inline-block;
+				position: absolute;
+				right: 10px;
+				border-left: 2px solid #ccc;
+				min-height: 50vh;
+				padding-left: 1.5vw;
+			}
+			
+			.left {
+				width:600px;
+				max-width: 40vw;
+				margin: 30px auto;
+				font-size: 1.25rem;
+				display: inline-block;
+				position: absolute;
+				left: 25px;
+				min-height: 50vh;
+			}
+			
+			.main span input, .left span input {
+				width: 100%;
+				padding: 10px 0;
+				padding-left: 15px;
+				outline-width: 0;
+				border: 0;
+				font-size: 1.15rem;
+				position: absolute;
+				left: 6px;
+				color: transparent;
+				caret-color: black;
+				vertical-align: middle;
+				z-index: 200;
+				background-color: transparent;
+				transform: translateY(-18%);
+			}
+			
+			.main span input::selection, .left span input::selection {
+				color: black;
+				background-color: #0fbf23;
+			}
+			
+			.main span, .left span {
+				position: relative;
+				width: 95%;
+			}
+			
+			.main span span, .left span span {
+				z-index: 100;
+				padding-left: 10px;
+				font-size: 1.15rem;
+			}
+			
+			.i::before {
+				content: "- ";
+			}
+			
+			.bolded::before {
+				content: "";
+			}
+			
+			.bolded {
+				position: relative;
+				left: -10px;
+				padding-top: 20px;
+			}
+			
+			.bolded input {
+				left: -4px !important;
+				font-weight: bold;
+			}
+			
+			.bolded {
+				font-weight: bold;
+			}
+			
+			.i, .bolded {
+				display: block;
+			}
+			
+			button {
+				position: fixed;
+				top: 20px;
+				right: 20px;
+				padding: 15px 20px;
+				border-radius: 3px;
+				background-color: #0fbf23;
+				color: white;
+				font-weight: bold;
+				text-transform: uppercase;
+				border: 0;
+				cursor: pointer;
+				transition: 0.2s;
+			}
+			
+			button:hover {
+				filter: brightness(90%);
+			}
+			
+			.buttons {
+				position: fixed;
+				top: 50%;
+				transform: translateY(-50%);
+				left: 30px;
+				width: 52px;
+				border-top: 1px solid #ccc;
+			}
+			
+			.buttons i {
+				font-size: 1rem;
+				border: 1px solid #ccc;
+				width: 50px;
+				height: 50px;
+				line-height: 50px;
+				text-align: center;
+				cursor: pointer;
+				white-space: nowrap;
+				border-top: 0;
+			}
+			
+			.buttons i:hover {
+				background-color: #eee;
+			}
+		</style>
+	
+		<script src="https://use.fontawesome.com/d0bc9af035.js"></script>
+	
+		<input class="title line" placeholder="Enter Title Here..." spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">
+		<button class="save">Save</button>
+		<div id="left" class="left">
+		</div>
+		<div id="main" class="main">
+		</div>
+		
+		<div class="buttons">
+			<i class="fa fa-bold" onmousedown="return bold();"></i>
+			<i class="fa fa-underline" onmousedown="return underline();"></i>
+			<i class="fa fa-italic" onmousedown="return italicize();"></i>
+		</div>
+		
+		<script>
+		
+			Array.prototype.insert = function ( item, index ) {
+				this.splice( index, 0, item );
+			};
+		
+			var modifiedLine = function() {
+				this.underlines = [];
+				this.bolds = [];
+				this.italics = [];
+				
+				this.underline = function(start, end, stringLen) {
+				
+					while (stringLen > this.underlines.length) {
+						this.underlines.push(0);
+					}
+					
+					var allBold = true;
+					for (var i = start; i < end; i++) {
+						if (this.underlines[i] == 0) {
+							this.underlines[i] = 1;
+							allBold = false;
+						}
+					}
+					
+					if (allBold) {
+						for (var i = start; i < end; i++) {
+							this.underlines[i] = 0;
+						}
+					}
+					
+				}
+				
+				this.bold = function(start, end, stringLen) {
+				
+					while (stringLen > this.bolds.length) {
+						this.bolds.push(0);
+					}
+					
+					var allBold = true;
+					for (var i = start; i < end; i++) {
+						if (this.bolds[i] == 0) {
+							this.bolds[i] = 1;
+							allBold = false;
+						}
+					}
+					
+					if (allBold) {
+						for (var i = start; i < end; i++) {
+							this.bolds[i] = 0;
+						}
+					}
+					
+				}
+				
+				this.italicize = function(start, end, stringLen) {
+				
+					while (stringLen > this.italics.length) {
+						this.italics.push(0);
+					}
+					
+					var allItalic = true;
+					for (var i = start; i < end; i++) {
+						if (this.italics[i] == 0) {
+							this.italics[i] = 1;
+							allItalic = false;
+						}
+					}
+					
+					if (allItalic) {
+						for (var i = start; i < end; i++) {
+							this.italics[i] = 0;
+						}
+					}
+					
+				}
+				
+			}
+			var lines = [];
+		
+			function underline() {
+				var elem = window.getSelection().baseNode;
+				var lineNum = getIndexOfNode(elem);
+				
+				lines[lineNum].underline(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
+				return false;
+			}
+			
+			function bold() {
+				var elem = window.getSelection().baseNode;
+				var lineNum = getIndexOfNode(elem);
+				
+				lines[lineNum].bold(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
+				return false;
+			}
+			
+			function italicize() {
+				var elem = window.getSelection().baseNode;
+				var lineNum = getIndexOfNode(elem);
+				
+				lines[lineNum].italicize(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
+				return false;
+			}
+		
+			lineCount = 0;
+			
+			function getIndexOfNode(node) {
+				var nodes = node.parentNode.childNodes;
+				for (var i = 0; i < nodes.length; i++) {
+					if (nodes[i] === node) {
+						return i-1;
+					}
+				}
+				return 0;
+			}
+			
+			function getNodeBefore(node) {
+				var nodes = node.parentNode.childNodes;
+				for (var i = 0; i < nodes.length; i++) {
+					if (nodes[i] === node) {
+						if (i == 1) { return node; } // cannot backspace first input
+						return nodes[i-1];
+					}
+				}
+			}
+			
+			function getNodeAfter(node) {
+				var nodes = node.parentNode.childNodes;
+				for (var i = 0; i < nodes.length; i++) {
+					if (nodes[i] === node) {
+						if (i == nodes.length-1) { return node; } // cannot backspace first input
+						return nodes[i+1];
+					}
+				}
+			}
+			
+			function setCaretPosition(elem, caretPos) {
+
+				if(elem != null) {
+					if(elem.createTextRange) {
+						var range = elem.createTextRange();
+						range.move('character', caretPos);
+						range.select();
+					}
+					else {
+						if(elem.selectionStart) {
+							elem.focus();
+							elem.setSelectionRange(caretPos, caretPos);
+						}
+						else
+							elem.focus();
+					}
+				}
+			}
+			
+			function insertAfter(newNode, referenceNode) {
+				referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+			}
+		
+			function addInput(container, isTitle, num, ref, val) {
+				var newSpan = document.createElement('span');
+				newSpan.className = "i";
+				if (isTitle) {
+					newSpan.className = "bolded";
+				}
+				newSpan.appendChild(document.createElement('span'));
+				var newInput = document.createElement('input');
+				
+				if (val) {
+					newInput.value = val;
+				}
+				
+				newSpan.appendChild(newInput);
+				newInput.className = "line";
+				newInput.setAttribute("spellcheck", "false");
+				newInput.setAttribute("autocorrect", "off");
+				newInput.setAttribute("autocomplete", "off");
+				newInput.setAttribute("autocapitalize", "off");
+				newSpan.appendChild(document.createElement('br'));
+				if (ref !== null) {
+					insertAfter(newSpan, ref);
+				} else {
+					container.appendChild(newSpan);
+				}
+				
+				lines.push(new modifiedLine());
+				
+				newInput.onkeypress = function(e) {
+					
+					var position = this.selectionStart;
+				
+					if (e.keyCode == 13) {
+						if (position < this.value.length) {
+							var text = this.value;
+							this.value = this.value.substring(0, position);
+							var newInput = addInput(container, false, 1, this.parentNode, text.substring(position, text.length));
+							newInput.focus();
+							newInput.selectionStart = 0;
+							newInput.selectionEnd = 0;
+						} else {
+							addInput(container, false, 1, this.parentNode).focus();
+						}
+					} else {
+						var line = lines[getIndexOfNode(this.parentNode)];
+						line.underlines.insert(0, position);
+						line.bolds.insert(0, position);
+						line.italics.insert(0, position);
+					}
+					
+				};
+				
+				newInput.onkeydown = function(e) {
+					var position = this.selectionStart;
+					
+					if (e.keyCode == 8 && position > 0) {
+						var line = lines[getIndexOfNode(this.parentNode)];
+						line.underlines.splice(position-1, 1);
+						line.bolds.splice(position-1, 1);
+						line.italics.splice(position-1, 1);
+					}
+					
+					if (e.keyCode == 8 && position == 0) {
+						// backspace
+						
+						if (this.parentNode.parentNode.childNodes[1] == this.parentNode) {
+							if (this.selectionEnd > this.selectionStart) {
+								this.value = this.value.substring(this.selectionEnd, this.value.length);
+								this.selectionStart = 0;
+								this.selectionEnd = 0;
+							}
+							return false;
+						}
+						
+						var line = lines[getIndexOfNode(this.parentNode)];
+						if (this.parentNode.className.includes("bolded")) { 
+							getNodeBefore(this.parentNode).childNodes[1].focus();
+							this.parentNode.parentNode.removeChild(this.parentNode);
+							return false; // don't backspace the last character in previous node
+						} else {
+							this.parentNode.className = "bolded";
+						}
+						
+					} else if (e.keyCode == 37 && position == 0) {
+						var nodeBefore = getNodeBefore(this.parentNode);
+						nodeBefore.childNodes[0].selectionStart = nodeBefore.childNodes[0].value.length;
+						nodeBefore.childNodes[0].focus();
+						return false;
+					} else if (e.keyCode == 39 && position == this.value.length) {
+						var nodeAfter = getNodeAfter(this.parentNode);
+						nodeAfter.childNodes[0].selectionStart = 0;
+						nodeAfter.childNodes[0].focus();
+						return false;
+					}
+					if (e.keyCode == 9) {
+						var num = this.parentNode.className.split("")[3];
+						if (num == 3) { num = 0; }
+						this.parentNode.className = "i i" + (parseInt(num) + 1);
+						return false;
+					}
+				}
+				
+				return newInput;
+			}
+			
+			function style(string, line) {
+				var newText = "";
+				var boldStatus = 0;
+				var underlineStatus = 0;
+				var italicsStatus = 0;
+				for (var i = 0; i < string.length; i++) {
+					
+					if (boldStatus == 0 && line.bolds[i] == 1) {
+						newText += "<b>";
+					} else if (boldStatus == 1 && line.bolds[i] == 0) {
+						newText += "</b>";
+					}
+					
+					if (underlineStatus == 0 && line.underlines[i] == 1) {
+						newText += "<u>";
+					} else if (underlineStatus == 1 && line.underlines[i] == 0) {
+						newText += "</u>";
+					}
+					
+					if (italicsStatus == 0 && line.italics[i] == 1) {
+						newText += "<i>";
+					} else if (italicsStatus == 1 && line.italics[i] == 0) {
+						newText += "</i>";
+					}
+					
+					newText += string.charAt(i);
+					boldStatus = line.bolds[i];
+					underlineStatus = line.underlines[i];
+					italicsStatus = line.italics[i];
+				}
+				if (boldStatus == 1 ) {
+					newText += "</b>";
+				}
+				if (underlineStatus == 1 ) {
+					newText += "</u>";
+				}
+				if (italicsStatus == 1 ) {
+					newText += "</i>";
+				}
+				return newText;
+			}
+			
+			setInterval(function() {
+				var spans = document.querySelectorAll('.i, .bolded');
+				
+				for (var i = 0; i < spans.length; i++) {
+					var s = spans[i];
+					
+					s.childNodes[0].innerHTML = style(s.childNodes[1].value, lines[i]);
+					
+				}
+			}, 20);
+			
+			setTimeout(function() {addInput(document.getElementById("main"), true, 1, null)}, 11);
+			setTimeout(function() {addInput(document.getElementById("left"), true, 1, null)}, 11);
+		</script>
+		
+	</body>
+
+</html>
