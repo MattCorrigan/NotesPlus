@@ -3,7 +3,7 @@
 <html>
 
 	<head>
-		<title>Outline Note</title>
+		<title>Cornell Note</title>
 		<link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
 	</head>
 	
@@ -162,8 +162,8 @@
 	
 		<script src="https://use.fontawesome.com/d0bc9af035.js"></script>
 	
-		<input class="title line" placeholder="Enter Title Here..." spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">
-		<button class="save">Save</button>
+		<input class="title line" id="title" placeholder="Enter Title Here..." spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">
+		<button class="save" onclick="save()">Save</button>
 		<div id="left" class="left">
 		</div>
 		<div id="main" class="main">
@@ -176,6 +176,22 @@
 		</div>
 		
 		<script>
+		
+			function getParam(parameterName) {
+				var result = null,
+					tmp = [];
+				location.search
+					.substr(1)
+					.split("&")
+					.forEach(function (item) {
+					  tmp = item.split("=");
+					  if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+					});
+				return result;
+			}
+		
+			var title = getParam("title");
+			document.getElementById("title").value = title;
 		
 			Array.prototype.insert = function ( item, index ) {
 				this.splice( index, 0, item );
@@ -253,13 +269,35 @@
 				}
 				
 			}
-			var lines = [];
+			var leftlines = [];
+			var mainlines = [];
+			
+			function isDescendant(parent, child) {
+				var node = child.parentNode;
+				while (node != null) {
+					if (node == parent) {
+						return true;
+					}
+					node = node.parentNode;
+				}
+				return false;
+			}
+			
+			function getLinesList(elem) {
+				var left = document.getElementById("left");
+				var main = document.getElementById("main");
+				if (isDescendant(left, elem) || elem == left) {
+					return leftlines;
+				} else if (isDescendant(main, elem) || elem == main) {
+					return mainlines;
+				}
+			}
 		
 			function underline() {
 				var elem = window.getSelection().baseNode;
 				var lineNum = getIndexOfNode(elem);
 				
-				lines[lineNum].underline(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
+				getLinesList(elem)[lineNum].underline(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
 				return false;
 			}
 			
@@ -267,7 +305,7 @@
 				var elem = window.getSelection().baseNode;
 				var lineNum = getIndexOfNode(elem);
 				
-				lines[lineNum].bold(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
+				getLinesList(elem)[lineNum].bold(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
 				return false;
 			}
 			
@@ -275,7 +313,7 @@
 				var elem = window.getSelection().baseNode;
 				var lineNum = getIndexOfNode(elem);
 				
-				lines[lineNum].italicize(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
+				getLinesList(elem)[lineNum].italicize(elem.childNodes[1].selectionStart, elem.childNodes[1].selectionEnd, elem.childNodes[1].value.length);
 				return false;
 			}
 		
@@ -360,8 +398,7 @@
 					container.appendChild(newSpan);
 				}
 				
-				lines.push(new modifiedLine());
-				
+				getLinesList(container).push(new modifiedLine());
 				newInput.onkeypress = function(e) {
 					
 					var position = this.selectionStart;
@@ -378,7 +415,7 @@
 							addInput(container, false, 1, this.parentNode).focus();
 						}
 					} else {
-						var line = lines[getIndexOfNode(this.parentNode)];
+						var line = getLinesList(container)[getIndexOfNode(this.parentNode)];
 						line.underlines.insert(0, position);
 						line.bolds.insert(0, position);
 						line.italics.insert(0, position);
@@ -390,7 +427,7 @@
 					var position = this.selectionStart;
 					
 					if (e.keyCode == 8 && position > 0) {
-						var line = lines[getIndexOfNode(this.parentNode)];
+						var line = getLinesList(container)[getIndexOfNode(this.parentNode)];
 						line.underlines.splice(position-1, 1);
 						line.bolds.splice(position-1, 1);
 						line.italics.splice(position-1, 1);
@@ -408,7 +445,7 @@
 							return false;
 						}
 						
-						var line = lines[getIndexOfNode(this.parentNode)];
+						var line = getLinesList(container)[getIndexOfNode(this.parentNode)];
 						if (this.parentNode.className.includes("bolded")) { 
 							getNodeBefore(this.parentNode).childNodes[1].focus();
 							this.parentNode.parentNode.removeChild(this.parentNode);
@@ -482,18 +519,274 @@
 			}
 			
 			setInterval(function() {
-				var spans = document.querySelectorAll('.i, .bolded');
+				var spans = document.getElementById('main').querySelectorAll('.i, .bolded');
 				
 				for (var i = 0; i < spans.length; i++) {
 					var s = spans[i];
 					
-					s.childNodes[0].innerHTML = style(s.childNodes[1].value, lines[i]);
+					s.childNodes[0].innerHTML = style(s.childNodes[1].value, getLinesList(s)[i]);
 					
+				}
+				
+				spans = document.getElementById('left').querySelectorAll('.i, .bolded');
+				
+				for (var i = 0; i < spans.length; i++) {
+					var s = spans[i];
+					
+					s.childNodes[0].innerHTML = style(s.childNodes[1].value, getLinesList(s)[i]);
 				}
 			}, 20);
 			
-			setTimeout(function() {addInput(document.getElementById("main"), true, 1, null)}, 11);
-			setTimeout(function() {addInput(document.getElementById("left"), true, 1, null)}, 11);
+			
+			function save() {
+			
+				var newTitle = document.getElementById("title").value;
+				if (newTitle != title) {
+					localStorage.removeItem(title);
+				}
+			
+				var fullString = "";
+			
+				var spans = document.getElementById('left').querySelectorAll('.i, .bolded');
+				
+				for (var i = 0; i < spans.length; i++) {
+					var s = spans[i];
+					
+					var line = s.childNodes[1].value;
+					fullString += line;
+					
+					if (i < spans.length-1) {
+						fullString += "|";
+					}
+				}
+				
+				fullString += "?*-*";
+				
+				spans = document.getElementById('main').querySelectorAll('.i, .bolded');
+				
+				for (var i = 0; i < spans.length; i++) {
+					var s = spans[i];
+					
+					var line = s.childNodes[1].value;
+					fullString += line;
+					
+					if (i < spans.length-1) {
+						fullString += "|";
+					}
+				}
+				
+				var myDate = new Date();
+				var dateString = (myDate.getMonth() + 1) + "-" + myDate.getDate() + "-" + myDate.getFullYear();
+				
+				spans = document.querySelectorAll('.i, .bolded');
+				var titles = [];
+				for (var i = 0; i < spans.length; i++) {
+					if (spans[i].className == "bolded") {
+						titles[i] = 1;
+					} else {
+						titles[i] = 0;
+					}
+				}
+				
+				var info = [];
+				info.push(leftlines);
+				info.push(mainlines);
+				info.push(titles);
+				localStorage.setItem(newTitle, "Cornell," + dateString + "," + fullString + "," + JSON.stringify(info));
+				
+				var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?title=' + newTitle;
+				window.history.pushState({path:newurl},'',newurl);
+			}
+			
+			setInterval(function() { save(); }, 1000 * 60);
+			
+			
+			function loadNote() {
+				var info = localStorage.getItem(title);
+				var fullString = info.split(",")[2];
+				
+				var leftString = fullString.split("?*-*")[0];
+				var mainString = fullString.split("?*-*")[1];
+				
+				var ls = leftString.split("|");
+				for (var i = 0; i < ls.length; i++) {
+					if (i == ls.length-1 && ls[i].length == 0) { break; }
+					addInput(document.getElementById("left"), false, 1, null, ls[i]);
+				}
+				
+				ls = mainString.split("|");
+				for (var i = 0; i < ls.length; i++) {
+					if (i == ls.length-1 && ls[i].length == 0) { break; }
+					addInput(document.getElementById("main"), false, 1, null, ls[i]);
+				}
+				
+				
+				var parts = info.split(",");
+				var jsonInfo = "";
+				for (var i = 3; i < parts.length; i++) {
+					jsonInfo += parts[i];
+					if (i != parts.length - 1) {
+						jsonInfo += ",";
+					}
+				}
+				
+				var spans = document.querySelectorAll('.i, .bolded');
+				var titles = JSON.parse(jsonInfo)[2];
+				for (var i = 0; i < spans.length; i++) {
+					if (titles[i] == 1) {
+						spans[i].className = "bolded";
+					}
+				}
+				leftlines = JSON.parse(jsonInfo)[0];
+				mainlines = JSON.parse(jsonInfo)[1];
+				
+				for (var i = 0; i < leftlines.length; i++) {
+					var line = leftlines[i];
+					line.underline = function(start, end, stringLen) {
+					
+						while (stringLen > this.underlines.length) {
+							this.underlines.push(0);
+						}
+						
+						var allBold = true;
+						for (var i = start; i < end; i++) {
+							if (this.underlines[i] == 0) {
+								this.underlines[i] = 1;
+								allBold = false;
+							}
+						}
+						
+						if (allBold) {
+							for (var i = start; i < end; i++) {
+								this.underlines[i] = 0;
+							}
+						}
+						
+					}
+					
+					line.bold = function(start, end, stringLen) {
+					
+						while (stringLen > this.bolds.length) {
+							this.bolds.push(0);
+						}
+						
+						var allBold = true;
+						for (var i = start; i < end; i++) {
+							if (this.bolds[i] == 0) {
+								this.bolds[i] = 1;
+								allBold = false;
+							}
+						}
+						
+						if (allBold) {
+							for (var i = start; i < end; i++) {
+								this.bolds[i] = 0;
+							}
+						}
+						
+					}
+					
+					line.italicize = function(start, end, stringLen) {
+					
+						while (stringLen > this.italics.length) {
+							this.italics.push(0);
+						}
+						
+						var allItalic = true;
+						for (var i = start; i < end; i++) {
+							if (this.italics[i] == 0) {
+								this.italics[i] = 1;
+								allItalic = false;
+							}
+						}
+						
+						if (allItalic) {
+							for (var i = start; i < end; i++) {
+								this.italics[i] = 0;
+							}
+						}
+						
+					}
+				}
+				
+				for (var i = 0; i < mainlines.length; i++) {
+					var line = mainlines[i];
+					line.underline = function(start, end, stringLen) {
+					
+						while (stringLen > this.underlines.length) {
+							this.underlines.push(0);
+						}
+						
+						var allBold = true;
+						for (var i = start; i < end; i++) {
+							if (this.underlines[i] == 0) {
+								this.underlines[i] = 1;
+								allBold = false;
+							}
+						}
+						
+						if (allBold) {
+							for (var i = start; i < end; i++) {
+								this.underlines[i] = 0;
+							}
+						}
+						
+					}
+					
+					line.bold = function(start, end, stringLen) {
+					
+						while (stringLen > this.bolds.length) {
+							this.bolds.push(0);
+						}
+						
+						var allBold = true;
+						for (var i = start; i < end; i++) {
+							if (this.bolds[i] == 0) {
+								this.bolds[i] = 1;
+								allBold = false;
+							}
+						}
+						
+						if (allBold) {
+							for (var i = start; i < end; i++) {
+								this.bolds[i] = 0;
+							}
+						}
+						
+					}
+					
+					line.italicize = function(start, end, stringLen) {
+					
+						while (stringLen > this.italics.length) {
+							this.italics.push(0);
+						}
+						
+						var allItalic = true;
+						for (var i = start; i < end; i++) {
+							if (this.italics[i] == 0) {
+								this.italics[i] = 1;
+								allItalic = false;
+							}
+						}
+						
+						if (allItalic) {
+							for (var i = start; i < end; i++) {
+								this.italics[i] = 0;
+							}
+						}
+						
+					}
+				}
+				
+			}
+			try {
+				loadNote();
+			} catch (e) {
+				console.log("Error Loading Note:");
+				console.error(e);
+				setTimeout(function() {addInput(document.getElementById("main"), true, 1, null)}, 11);
+				setTimeout(function() {addInput(document.getElementById("left"), true, 1, null)}, 11);
+			}
 		</script>
 		
 	</body>

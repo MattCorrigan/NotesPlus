@@ -67,17 +67,23 @@
 			}
 			
 			.i1::before {
-				content: "I.";
+				content: attr(data-before);
 				width: 20px;
+				position: absolute;
+				left: -25px;
 			}
 			
 			.i1 {
 				position: relative;
-				left: 0px;
+				left: 20px;
+			}
+			
+			.i1 input {
+				margin-left: -10px;
 			}
 			
 			.i2::before {
-				content: "A.";
+				content: attr(data-before);
 				width: 20px;
 			}
 			
@@ -91,7 +97,7 @@
 			}
 			
 			.i3::before {
-				content: "1.";
+				content: attr(data-before);
 				width: 20px;
 			}
 				
@@ -367,15 +373,18 @@
 					var position = this.selectionStart;
 				
 					if (e.keyCode == 13) {
+					
+						var num = parseInt(this.parentNode.className.split("")[3]);
+					
 						if (position < this.value.length) {
 							var text = this.value;
 							this.value = this.value.substring(0, position);
-							var newInput = addInput(1, this.parentNode, text.substring(position, text.length));
+							var newInput = addInput(num, this.parentNode, text.substring(position, text.length));
 							newInput.focus();
 							newInput.selectionStart = 0;
 							newInput.selectionEnd = 0;
 						} else {
-							addInput(1, this.parentNode).focus();
+							addInput(num, this.parentNode).focus();
 						}
 					} else {
 						var line = lines[getIndexOfNode(this.parentNode)];
@@ -478,10 +487,36 @@
 			
 			setInterval(function() {
 				var spans = document.getElementsByClassName("i");
+				
+				var lastIndent = 0;
+				var counts = [0,0,0];
+				
+				var symbols = [["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"],
+								["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]];
+				
 				for (var i = 0; i < spans.length; i++) {
 					var s = spans[i];
+					var num = parseInt(s.className.split("")[3]);
 					
 					s.childNodes[0].innerHTML = style(s.childNodes[1].value, lines[i]);
+					
+					var count = counts[num-1];
+					
+					counts[num-1]+=1;
+					if (num < 3) {
+						counts[2] = 0;
+					}
+					if (num < 2) {
+						counts[1] = 0;
+					}
+					
+					if (num == 1 || num == 2) {
+						s.setAttribute("data-before", symbols[num-1][count] + ".");
+					} else {
+						s.setAttribute("data-before", (count+1) + ".");
+					}
+					
+					lastIndent = num;
 					
 				}
 			}, 20);
@@ -492,7 +527,7 @@
 			
 				var newTitle = document.getElementById("title").value;
 				if (newTitle != title) {
-					localStorage.removeItem("title");
+					localStorage.removeItem(title);
 				}
 			
 				var fullString = "";
@@ -522,9 +557,9 @@
 				var info = [];
 				info.push(lines);
 				info.push(nums);
-				localStorage.setItem(title, "Outline," + dateString + "," + fullString + "," + JSON.stringify(info));
+				localStorage.setItem(newTitle, "Outline," + dateString + "," + fullString + "," + JSON.stringify(info));
 				
-				var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?title=' + title;
+				var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?title=' + newTitle;
 				window.history.pushState({path:newurl},'',newurl);
 				
 			}

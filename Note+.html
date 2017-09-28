@@ -33,6 +33,10 @@
  
 <script>
 
+if (localStorage.getItem("order") == null) {
+	localStorage.setItem("order", "");
+}
+
 function alreadyExists(name) {
 	for (var key in localStorage) {
 		if (key == name) {
@@ -58,15 +62,17 @@ function addNote(style, name, myDate) {
 		if (name == "" || name == null) { return; }
 	}
 	if(style == "Bullet Point"){
-	link.setAttribute("href", "./bullets.html?title=" + name);}
+	li.setAttribute("onclick", 'location.href = "./bullets.html?title=" + "' + name + '";');}
 	if(style == "Cornell"){
-	link.setAttribute("href", "./cornell.html?title=" + name);}
+	li.setAttribute("onclick", 'location.href = "./cornell.html?title=" + "' + name + '";');}
 	if(style == "Outline"){
-	link.setAttribute("href", "./outline.html?title=" + name);}
+	li.setAttribute("onclick", 'location.href = "./outline.html?title=" + "' + name + '";');}
 	b.innerHTML =  name +" - "+style;
-	link.onclick = function() {moveNote(this);};
+	link.onclick = function(e) {
+		moveNote(name);
+	};
 	var button = document.createElement("button");
-	button.onclick = function() {deleteNote(this);};
+	button.onclick = function(e) {deleteNote(this);e.stopPropagation()};
 	button.className = "w3-button w3-black w3-right w3-padding-small";
 	button.innerHTML = "X";
 	var br1 = document.createElement("br");
@@ -89,23 +95,59 @@ function addNote(style, name, myDate) {
 	
 	document.getElementsByClassName("notes")[0].appendChild(li);
 	var info = style + "," + myDate;
-	localStorage.setItem(name, info);
+	if (localStorage.getItem(name) == null) {
+		localStorage.setItem(name, info);
+		localStorage.setItem("order", name + ";" + localStorage.getItem("order"));
 	}
-function moveNote(button){
-	button.parentNode.parentNode.parentNode.parentNode.prepend(button.parentNode.parentNode.parentNode);
+}
+
+
+function moveNote(name){
+	var order = localStorage.getItem("order").split(";");
+	var newOrder = [];
+	newOrder.push(name);
+	for (var i = 0; i < order.length; i++) {
+		console.log(order[i]);
+		console.log(name);
+		if (order[i] !== name) {
+			newOrder.push(order[i]);
+		}
+	}
+	localStorage.setItem("order", newOrder.join(";"));
+	console.log(newOrder.length);
+	console.log(order.length);
 }
 	
 function deleteNote(button) {
 	var r = confirm("Are you sure that you want to delete this note?")
 	if(r){
-	button.parentNode.parentNode.parentNode.parentNode.removeChild(button.parentNode.parentNode.parentNode);
+		button.parentNode.parentNode.parentNode.parentNode.removeChild(button.parentNode.parentNode.parentNode);
+		var k = button.parentNode.childNodes[0].innerHTML.split(" - ")[0];
+		localStorage.removeItem(k);
+		
+		var order = localStorage.getItem("order").split(";");
+		for (var i = 0; i < order.length; i++) {
+			if (order[i] == k) {
+				order.splice(i, 1);
+			}
+		}
+		localStorage.setItem("order", order.join(";"));
 	}
-	var k = button.parentNode.childNodes[0].innerHTML.split(" - ")[0];
-	localStorage.removeItem(k);
 }
 function loadNotes(){
-	for ( var i = 0, len = localStorage.length; i < len; ++i ) {
-		addNote(localStorage.getItem(localStorage.key(i)).split(",")[0], localStorage.key(i), localStorage.getItem(localStorage.key(i)).split(",")[1]);
+
+	if (localStorage.getItem("order").length == 0) { return; }
+
+	document.getElementsByClassName("notes")[0].innerHTML = "";
+	var names = localStorage.getItem("order").split(";");
+	var order = localStorage.getItem("order").split(";");
+	for ( var i = 0, len = localStorage.length; i < len; i++ ) {
+		if (localStorage.key(i) == "order") { continue; }
+		order[order.indexOf(localStorage.key(i))] = [localStorage.getItem(localStorage.key(i)).split(",")[0], localStorage.getItem(localStorage.key(i)).split(",")[1]];
+	}
+	for (var i = 0; i < order.length; i++) {
+		if (names[i] == "") { continue; }
+		addNote(order[i][0], names[i], order[i][1]);
 	}
 }
 loadNotes();

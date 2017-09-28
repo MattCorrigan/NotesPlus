@@ -3,7 +3,7 @@
 <html>
 
 	<head>
-		<title>Outline Note</title>
+		<title>Bullet Points Note</title>
 		<link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
 	</head>
 	
@@ -494,7 +494,7 @@
 			
 				var newTitle = document.getElementById("title").value;
 				if (newTitle != title) {
-					localStorage.removeItem("title");
+					localStorage.removeItem(title);
 				}
 			
 				var fullString = "";
@@ -527,8 +527,10 @@
 				var info = [];
 				info.push(lines);
 				info.push(titles);
-				localStorage.setItem(title, "Bullet Point," + dateString + "," + fullString + "," + JSON.stringify(info));
+				localStorage.setItem(newTitle, "Bullet Point," + dateString + "," + fullString + "," + JSON.stringify(info));
 				
+				var newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?title=' + newTitle;
+				window.history.pushState({path:newurl},'',newurl);
 			}
 			
 			setInterval(function() { save(); }, 1000 * 60);
